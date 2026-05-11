@@ -264,8 +264,52 @@ EOF
 fi
 echo ""
 
-# Step 7: Change default shell to zsh
-print_step "Step 7/7: Changing default shell to zsh"
+# Step 7: Install Miniconda
+print_step "Step 7/8: Installing Miniconda (Python environment manager)"
+
+if command -v conda &> /dev/null; then
+    print_warning "conda is already installed ($(conda --version))"
+    if ! confirm "Reinstall Miniconda?"; then
+        print_step "✓ Using existing conda installation"
+    else
+        if confirm "Remove existing conda installation first?"; then
+            rm -rf ~/miniconda3
+            print_step "✓ Removed existing conda"
+        fi
+        # Download and install Miniconda
+        MINICONDA_INSTALLER="/tmp/miniconda.sh"
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O "$MINICONDA_INSTALLER"
+        bash "$MINICONDA_INSTALLER" -b -p "$HOME/miniconda3"
+        rm "$MINICONDA_INSTALLER"
+
+        # Initialize conda for bash and zsh
+        "$HOME/miniconda3/bin/conda" init bash
+        "$HOME/miniconda3/bin/conda" init zsh
+
+        print_step "✓ Miniconda installed and initialized"
+    fi
+else
+    if confirm "Install Miniconda? (Recommended for Python development)"; then
+        # Download and install Miniconda
+        MINICONDA_INSTALLER="/tmp/miniconda.sh"
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O "$MINICONDA_INSTALLER"
+        bash "$MINICONDA_INSTALLER" -b -p "$HOME/miniconda3"
+        rm "$MINICONDA_INSTALLER"
+
+        # Initialize conda for bash and zsh
+        "$HOME/miniconda3/bin/conda" init bash
+        "$HOME/miniconda3/bin/conda" init zsh
+
+        print_step "✓ Miniconda installed and initialized"
+        print_warning "Restart your shell or run: source ~/.zshrc"
+    else
+        print_warning "Skipped Miniconda installation"
+    fi
+fi
+echo ""
+
+# Step 8: Change default shell to zsh
+print_step "Step 8/8: Changing default shell to zsh"
 
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" = "zsh" ]; then
@@ -293,6 +337,9 @@ echo "  ✓ oh-my-zsh"
 echo "  ✓ zsh-syntax-highlighting plugin"
 echo "  ✓ zsh-autosuggestions plugin"
 echo "  ✓ tmux $(tmux -V 2>/dev/null | cut -d' ' -f2)"
+if command -v conda &> /dev/null; then
+    echo "  ✓ miniconda $(conda --version 2>/dev/null | cut -d' ' -f2)"
+fi
 echo ""
 echo "Configuration files:"
 echo "  ✓ ~/.zshrc (plugins configured)"
