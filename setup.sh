@@ -264,37 +264,48 @@ EOF
 fi
 echo ""
 
-# Final steps
+# Step 7: Change default shell to zsh
+print_step "Step 7/7: Changing default shell to zsh"
+
+CURRENT_SHELL=$(basename "$SHELL")
+if [ "$CURRENT_SHELL" = "zsh" ]; then
+    print_warning "Default shell is already zsh"
+else
+    if confirm "Change default shell to zsh? (Recommended)"; then
+        chsh -s $(which zsh)
+        print_step "✓ Default shell changed to zsh"
+        print_warning "You need to log out and log back in for the change to take effect"
+    else
+        print_warning "Skipped shell change. Run manually: chsh -s \$(which zsh)"
+    fi
+fi
+echo ""
+
+# Final summary
 echo "=========================================="
 echo "  Setup Complete!"
 echo "=========================================="
 echo ""
+echo "Installed components:"
+echo "  ✓ git $(git --version 2>/dev/null | cut -d' ' -f3)"
+echo "  ✓ zsh $(zsh --version 2>/dev/null | cut -d' ' -f2)"
+echo "  ✓ oh-my-zsh"
+echo "  ✓ zsh-syntax-highlighting plugin"
+echo "  ✓ zsh-autosuggestions plugin"
+echo "  ✓ tmux $(tmux -V 2>/dev/null | cut -d' ' -f2)"
+echo ""
+echo "Configuration files:"
+echo "  ✓ ~/.zshrc (plugins configured)"
+echo "  ✓ ~/.tmux.conf (mouse + 10000 lines history)"
+echo ""
 echo "Next steps:"
-echo "1. Change default shell to zsh:"
-echo "   ${GREEN}chsh -s \$(which zsh)${NC}"
+echo "1. ${YELLOW}Log out and log back in${NC} to activate zsh"
 echo ""
-echo "2. Log out and log back in for shell change to take effect"
-echo ""
-echo "3. Start using tmux:"
+echo "2. Start using tmux:"
 echo "   ${GREEN}tmux${NC}"
 echo "   - Scroll with mouse wheel or Shift+PageUp/PageDown"
-echo "   - Prefix key is Ctrl+b"
+echo "   - Prefix key: Ctrl+b"
 echo "   - Reload config: Ctrl+b then r"
 echo ""
-echo "4. Verify installations:"
-echo "   git --version"
-echo "   zsh --version"
-echo "   tmux -V"
+echo "3. Enjoy your new development environment!"
 echo ""
-
-if confirm "Change default shell to zsh now?"; then
-    chsh -s $(which zsh)
-    print_step "✓ Default shell changed to zsh"
-    echo ""
-    print_warning "Please log out and log back in for the change to take effect"
-else
-    print_warning "Remember to run: chsh -s \$(which zsh)"
-fi
-
-echo ""
-echo "Setup script completed successfully!"
