@@ -41,14 +41,42 @@ echo "  Linux Development Environment Setup"
 echo "=========================================="
 echo ""
 
-# Step 1: Update apt
-print_step "Step 1/6: Updating apt package lists"
-if confirm "Update apt? (Recommended)"; then
-    sudo apt update
-    if confirm "Upgrade existing packages?"; then
-        sudo apt upgrade -y
+# Step 1: Fix apt sources and update
+print_step "Step 1/6: Fixing apt sources and updating"
+
+# Check for problematic Docker repository
+if [ -f /etc/apt/sources.list.d/docker.list ] && grep -q "debian" /etc/apt/sources.list.d/docker.list; then
+    print_warning "Found incorrect Docker repository (Debian on Ubuntu system)"
+    if confirm "Fix Docker repository configuration?"; then
+        # Backup the file
+        sudo cp /etc/apt/sources.list.d/docker.list /etc/apt/sources.list.d/docker.list.backup.$(date +%Y%m%d_%H%M%S)
+
+        # Remove or comment out the problematic line
+        sudo sed -i 's|^deb.*download.docker.com/linux/debian|# &|' /etc/apt/sources.list.d/docker.list
+
+        print_step "✓ Docker repository disabled (backup created)"
+        print_warning "To properly install Docker on Ubuntu, run: curl -fsSL https://get.docker.com | sh"
     fi
-    print_step "✓ apt updated successfully"
+fi
+
+if confirm "Update apt? (Recommended)"; then
+    # Update with error handling
+    if sudo apt update 2>&1 | tee /tmp/apt-update.log; then
+        print_step "✓ apt updated successfully"
+
+        if confirm "Upgrade existing packages?"; then
+            sudo apt upgrade -y
+            print_step "✓ Packages upgraded"
+        fi
+    else
+        print_warning "apt update completed with warnings (check /tmp/apt-update.log)"
+        if confirm "Continue anyway?"; then
+            print_step "Continuing with installation..."
+        else
+            print_error "Installation aborted by user"
+            exit 1
+        fi
+    fi
 else
     print_warning "Skipped apt update"
 fi
